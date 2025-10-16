@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ClipboardList, Plus, Calendar, User, Target } from 'lucide-react';
+import { ClipboardList, Plus, Calendar, User } from 'lucide-react';
 import type { Planilha } from '../types';
 
 export default function Planilhas() {
