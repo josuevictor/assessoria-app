@@ -59,7 +59,7 @@ export default function Avaliacoes() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Planilhas de Treino</h2>
+          <h2 className="text-2xl font-bold text-gray-900">Avaliações</h2>
           <p className="text-gray-600 mt-1">Gerencie as avaliações</p>
         </div>
         <button

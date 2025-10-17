@@ -156,9 +156,6 @@ export default function Planilhas() {
                   <h3 className="font-semibold text-gray-900 text-lg">
                     {planilha.descricao || 'Sem descrição'}
                   </h3>
-                  <p className="text-sm text-gray-500 mt-1">
-                    ID: {planilha.id} — Usuário #{planilha.user_id}
-                  </p>
                 </div>
               </div>
             </div>
@@ -166,7 +163,7 @@ export default function Planilhas() {
             <div className="space-y-3 mb-4">
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <User size={16} className="text-gray-400" />
-                <span>Usuário ID: {planilha.user_id}</span>
+                <span>Usuário: {planilha.user?.name}</span>
               </div>
 
               <div className="flex items-center gap-2 text-sm text-gray-600">

@@ -170,42 +170,54 @@ export default function Treinos() {
         <div className="space-y-4">
           {treinos[selectedDay] && treinos[selectedDay].length > 0 ? (
             treinos[selectedDay].map((treino) => (
-              <div
-                key={treino.id}
-                className="border border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-all hover:shadow-md"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="bg-gradient-to-br from-orange-400 to-red-500 p-3 rounded-lg text-white">
-                      <Activity size={24} />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-gray-900 text-lg capitalize">
-                          {treino.tipo}
-                        </h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTipoColor(treino.tipo)}`}>
-                          {treino.tipo}
-                        </span>
+                <div
+                  key={treino.id}
+                  className="border border-gray-200 rounded-lg p-6 hover:border-orange-300 transition-all hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3 flex-1">
+                      <div className="bg-gradient-to-br from-orange-400 to-red-500 p-3 rounded-lg text-white">
+                        <Activity size={24} />
                       </div>
-                      <p className="text-sm text-gray-600 mt-2">{treino.observacoes}</p>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-gray-900 text-lg capitalize">
+                            {treino.tipo}
+                          </h3>
+                          <span
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${getTipoColor(
+                              treino.tipo
+                            )}`}
+                          >
+                            {treino.tipo}
+                          </span>
+                        </div>
+
+                        {/* 👇 Aqui adicionamos o nome do aluno */}
+                        {treino.planilha?.user?.name && (
+                          <p className="text-sm text-orange-600 font-medium">
+                            Aluno: {treino.planilha.user.name}
+                          </p>
+                        )}
+
+                        <p className="text-sm text-gray-600 mt-2">{treino.observacoes}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200">
-                  <div className="flex items-center gap-4 text-sm text-gray-500">
-                    <Calendar size={16} />
-                    <span>
-                      {new Date(treino.data_treino + 'T00:00:00').toLocaleDateString('pt-BR')}
-                    </span>
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                    <div className="flex items-center gap-4 text-sm text-gray-500">
+                      <Calendar size={16} />
+                      <span>
+                        {new Date(treino.data_treino + 'T00:00:00').toLocaleDateString('pt-BR')}
+                      </span>
+                    </div>
+                    <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
+                      <CheckCircle2 size={16} />
+                      Marcar Realizado
+                    </button>
                   </div>
-                  <button className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-green-600 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-                    <CheckCircle2 size={16} />
-                    Marcar Realizado
-                  </button>
                 </div>
-              </div>
             ))
           ) : (
             <div className="text-center py-12">

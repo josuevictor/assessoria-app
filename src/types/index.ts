@@ -13,6 +13,11 @@ export interface Aluno {
   ativo: boolean;
   created_at: string | null;
   updated_at: string | null;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 };
 
 export interface Planilha {
@@ -23,6 +28,11 @@ export interface Planilha {
   descricao: string;
   created_at: string;
   updated_at: string;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
 }
 
 export interface Treino {
@@ -35,6 +45,7 @@ export interface Treino {
   observacoes?: string;
   data_treino: string;
   dia_semana: string;
+  planilha?: Planilha;
 }
 
 export interface TreinoRealizado {

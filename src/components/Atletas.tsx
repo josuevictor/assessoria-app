@@ -55,6 +55,7 @@ export default function Atletas() {
       (atleta?.matricula?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         atleta?.cpf?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         atleta?.telefone?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        atleta?.user?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         atleta?.cidade?.toLowerCase().includes(searchTerm.toLowerCase())) ?? false
   );
 
@@ -351,7 +352,7 @@ export default function Atletas() {
                     <User size={24} />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">{atleta.matricula}</h3>
+                    <h3 className="font-semibold text-gray-900">{atleta.user?.name}</h3>
                     <p className="text-sm text-gray-500">{atleta.cpf}</p>
                   </div>
                 </div>
