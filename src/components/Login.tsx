@@ -31,7 +31,7 @@ export default function LoginPage() {
   // Redireciona automaticamente se já estiver logado
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = "/dashboard";
+      window.location.href = "/";
     }
   }, [isAuthenticated]);
 
@@ -60,7 +60,7 @@ export default function LoginPage() {
         }
         localStorage.setItem("user", JSON.stringify(data.user));
         setMessage("✅ Login realizado com sucesso!");
-        window.location.href = "/dashboard";
+        window.location.href = "/";
       } else {
         setMessage(data.message || "❌ Usuário ou senha incorretos.");
       }
