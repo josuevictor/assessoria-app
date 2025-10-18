@@ -11,7 +11,7 @@ export default function Eventos() {
   useEffect(() => {
     async function carregarEventos() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/eventos-corrida');
+        const response = await fetch('https://assessoria-api.onrender.com/api/eventos-corrida');
         if (!response.ok) {
           throw new Error(`Erro ao buscar eventos (${response.status})`);
         }

@@ -22,7 +22,7 @@ export default function Planilhas() {
   useEffect(() => {
     async function carregarPlanilhas() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/planilhas');
+        const response = await fetch('https://assessoria-api.onrender.com/api/planilhas');
         if (!response.ok) {
           throw new Error(`Erro ao buscar planilhas (${response.status})`);
         }
@@ -50,7 +50,7 @@ export default function Planilhas() {
     };
 
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/planilhas', {
+      const response = await fetch('https://assessoria-api.onrender.com/api/planilhas', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export default function Planilhas() {
     setPlanilhaSelecionada(planilha);
     setDetalhesModal(true);
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/treino/${planilha.id}`);
+      const response = await fetch(`https://assessoria-api.onrender.com/api/treino/${planilha.id}`);
       if (!response.ok) throw new Error('Erro ao buscar treinos');
       const data = await response.json();
       setTreinos(data);

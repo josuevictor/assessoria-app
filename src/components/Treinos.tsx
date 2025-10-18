@@ -23,7 +23,7 @@ export default function Treinos() {
   useEffect(() => {
     async function fetchTreinos() {
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/treino');
+        const response = await fetch('https://assessoria-api.onrender.com/api/treino');
         const data: Treino[] = await response.json();
 
         // Agrupa os treinos por dia_semana
@@ -47,7 +47,7 @@ export default function Treinos() {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch('http://127.0.0.1:8000/api/treino/', {
+      const response = await fetch('https://assessoria-api.onrender.com/api/treino/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,7 +90,7 @@ export default function Treinos() {
       setLoading(true);
       // Recarrega os treinos
       try {
-        const response = await fetch('http://127.0.0.1:8000/api/treino');
+        const response = await fetch('https://assessoria-api.onrender.com/api/treino');
         const data: Treino[] = await response.json();
         const agrupados: Record<string, Treino[]> = diasSemana.reduce((acc, dia) => {
           acc[dia] = data.filter((t) => t.dia_semana.toLowerCase() === dia);
@@ -193,7 +193,6 @@ export default function Treinos() {
                           </span>
                         </div>
 
-                        {/* 👇 Aqui adicionamos o nome do aluno */}
                         {treino.planilha?.user?.name && (
                           <p className="text-sm text-orange-600 font-medium">
                             Aluno: {treino.planilha.user.name}
