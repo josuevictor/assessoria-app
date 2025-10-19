@@ -3,7 +3,7 @@ import type { Aluno } from '../types';
 const API_URL = import.meta.env.VITE_API_URL;
 
 export async function fetchAlunos(): Promise<Aluno[]> {
-  const response = await fetch(API_URL);
+  const response = await fetch(`${API_URL}/alunos/`);
   return response.json();
 }
 
