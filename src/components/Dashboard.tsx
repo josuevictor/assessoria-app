@@ -23,14 +23,14 @@ export default function Dashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [kmTotais, setKmTotais] = useState(0);
 
-  const API_BASE = "https://assessoria-api.onrender.com/api";
+  const API_URL = import.meta.env.VITE_API_URL;
 
   async function loadDashboardData() {
     try {
       const [alunosRes, treinosRes, eventosRes] = await Promise.all([
-        axios.get(`${API_BASE}/alunos`),
-        axios.get(`${API_BASE}/treino-realizado`),
-        axios.get(`${API_BASE}/eventos-corrida`),
+        axios.get(`${API_URL}/alunos`),
+        axios.get(`${API_URL}/treino-realizado`),
+        axios.get(`${API_URL}/eventos-corrida`),
       ]);
 
       const alunos = alunosRes.data;

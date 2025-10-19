@@ -20,10 +20,12 @@ export default function Treinos() {
 
   const diasSemana = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     async function fetchTreinos() {
       try {
-        const response = await fetch('https://assessoria-api.onrender.com/api/treino');
+        const response = await fetch(`${API_URL}/treino`);
         const data: Treino[] = await response.json();
 
         // Agrupa os treinos por dia_semana
@@ -47,7 +49,7 @@ export default function Treinos() {
     e.preventDefault();
     setSaving(true);
     try {
-      const response = await fetch('https://assessoria-api.onrender.com/api/treino/', {
+      const response = await fetch(`${API_URL}/treino/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,7 +92,7 @@ export default function Treinos() {
       setLoading(true);
       // Recarrega os treinos
       try {
-        const response = await fetch('https://assessoria-api.onrender.com/api/treino');
+        const response = await fetch(`${API_URL}/treino`);
         const data: Treino[] = await response.json();
         const agrupados: Record<string, Treino[]> = diasSemana.reduce((acc, dia) => {
           acc[dia] = data.filter((t) => t.dia_semana.toLowerCase() === dia);

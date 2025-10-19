@@ -11,11 +11,13 @@ export default function Avaliacoes() {
 
   const ITEMS_PER_PAGE = 6;
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   // Buscar avaliações da API
   useEffect(() => {
     const fetchAvaliacoes = async () => {
       try {
-        const response = await fetch('https://assessoria-api.onrender.com/api/avaliacoes-fisicas/');
+        const response = await fetch(`${API_URL}/avaliacoes-fisicas/`);
         const data = await response.json();
         setAvaliacoes(data);
       } catch (error) {

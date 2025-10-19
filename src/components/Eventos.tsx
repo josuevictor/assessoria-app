@@ -8,10 +8,12 @@ export default function Eventos() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     async function carregarEventos() {
       try {
-        const response = await fetch('https://assessoria-api.onrender.com/api/eventos-corrida');
+        const response = await fetch(`${API_URL}/eventos-corrida`);
         if (!response.ok) {
           throw new Error(`Erro ao buscar eventos (${response.status})`);
         }
