@@ -19,10 +19,12 @@ export default function Planilhas() {
   const [planilhaSelecionada, setPlanilhaSelecionada] = useState<Planilha | null>(null);
   const [loadingTreinos, setLoadingTreinos] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     async function carregarPlanilhas() {
       try {
-        const response = await fetch('https://assessoria-api.onrender.com/api/planilhas');
+        const response = await fetch(`${API_URL}/planilhas`);
         if (!response.ok) {
           throw new Error(`Erro ao buscar planilhas (${response.status})`);
         }
@@ -50,7 +52,7 @@ export default function Planilhas() {
     };
 
     try {
-      const response = await fetch('https://assessoria-api.onrender.com/api/planilhas', {
+      const response = await fetch(`${API_URL}/planilhas`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
