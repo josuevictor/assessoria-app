@@ -2,6 +2,30 @@ import type { Aluno } from '../types';
 
 const API_URL = import.meta.env.VITE_API_URL;
 
+export async function checkUserEmail(email: string) {
+  try {
+    const res = await fetch(`${API_URL}/check-user`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    return data.exists; // true se existir, false se não
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+}
+
+export async function registerUser(userData: { email: string, name: string, password: string }) {
+  const res = await fetch(`${API_URL}/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(userData),
+  });
+  return res.json();
+}
+
 export async function fetchAlunos(): Promise<Aluno[]> {
   const response = await fetch(`${API_URL}/alunos/`);
   return response.json();

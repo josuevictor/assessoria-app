@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Mail, Phone, Calendar, Edit, Trash2, User } from 'lucide-react';
 import type { Aluno } from '../types';
-import { fetchAlunos, createAluno, updateAluno } from '../services/alunoApi';
+import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser } from '../services/alunoApi';
 import { buscarEnderecoPorCep } from '../utils/cep';
 import Swal from 'sweetalert2';
 import { inativarAluno } from '../services/alunoApi';
@@ -83,51 +83,107 @@ export default function Atletas() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const { ok, result } = await createAluno(form);
-      if (!ok) {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    // 1️⃣ Checa se o usuário existe
+    const userExists = await checkUserEmail(form.user_email);
+
+    if (!userExists) {
+      // 2️⃣ Abre modal de cadastro de usuário
+      const { value: userInfo } = await Swal.fire({
+        title: 'Usuário não encontrado',
+        html:
+          '<input id="swal-name" class="swal2-input" placeholder="Nome">' +
+          '<input id="swal-pass" type="password" class="swal2-input" placeholder="Senha">',
+        focusConfirm: false,
+        preConfirm: () => {
+          const name = (document.getElementById('swal-name') as HTMLInputElement).value;
+          const password = (document.getElementById('swal-pass') as HTMLInputElement).value;
+          if (!name || !password) {
+            Swal.showValidationMessage('Preencha todos os campos');
+            return null;
+          }
+          return { name, password };
+        }
+      });
+
+      if (!userInfo) {
+        setLoading(false);
+        return;
+      }
+
+      // 3️⃣ Cadastra o usuário
+      const userResult = await registerUser({
+        email: form.user_email,
+        name: userInfo.name,
+        password: userInfo.password
+      });
+
+      if (!userResult.ok) {
         Swal.fire({
           icon: 'error',
-          title: 'Erro ao cadastrar',
-          text: traduzirErroApi(result.message || ''),
-          confirmButtonColor: '#ea580c',
+          title: 'Erro ao cadastrar usuário',
+          text: userResult.message || 'Não foi possível cadastrar o usuário',
         });
         setLoading(false);
         return;
       }
-      setShowModal(false);
-      setForm({
-        user_email: '',
-        cpf: '',
-        data_nascimento: '',
-        sexo: '',
-        telefone: '',
-        cep: '',
-        endereco: '',
-        cidade: '',
-        estado: '',
-      });
-      const alunos = await fetchAlunos();
-      setAtletas(alunos);
+
       Swal.fire({
         icon: 'success',
-        title: 'Aluno cadastrado!',
-        text: 'O aluno foi cadastrado com sucesso.',
-        confirmButtonColor: '#ea580c',
+        title: 'Usuário cadastrado!',
+        text: 'O usuário foi cadastrado com sucesso.',
       });
-    } catch {
+    }
+
+    // 4️⃣ Cadastra o aluno normalmente
+    const { ok, result } = await createAluno(form);
+    if (!ok) {
       Swal.fire({
         icon: 'error',
-        title: 'Erro ao cadastrar',
-        text: 'Não foi possível cadastrar o aluno.',
-        confirmButtonColor: '#ea580c',
+        title: 'Erro ao cadastrar aluno',
+        text: traduzirErroApi(result.message || ''),
       });
-    } finally {
       setLoading(false);
+      return;
     }
+
+    setShowModal(false);
+    setForm({
+      user_email: '',
+      cpf: '',
+      data_nascimento: '',
+      sexo: '',
+      telefone: '',
+      cep: '',
+      endereco: '',
+      cidade: '',
+      estado: '',
+    });
+
+    const alunos = await fetchAlunos();
+    setAtletas(alunos);
+
+    Swal.fire({
+      icon: 'success',
+      title: 'Aluno cadastrado!',
+      text: 'O aluno foi cadastrado com sucesso.',
+    });
+
+  } catch (err) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Erro',
+      text: 'Não foi possível cadastrar.',
+    });
+  } finally {
+    setLoading(false);
   }
+}
+
+
 
   // Função para traduzir mensagens de erro da API
   function traduzirErroApi(mensagem: string) {
