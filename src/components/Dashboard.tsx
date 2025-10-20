@@ -85,7 +85,7 @@ export default function Dashboard() {
         .slice(-5)
         .reverse()
         .map((t: any) => ({
-          athlete: "Atleta " + t.planilha_id,
+          athlete: "Atleta " + t.user.name,
           activity: t.tipo,
           time: t.tempo_previsto_min + " min",
           distance: (t.distancia_prevista_km || 0) + " km",

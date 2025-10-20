@@ -46,6 +46,10 @@ export interface Treino {
   data_treino: string;
   dia_semana: string;
   planilha?: Planilha;
+  user?: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface TreinoRealizado {
@@ -57,6 +61,10 @@ export interface TreinoRealizado {
   tempo?: string;
   ritmo?: string;
   observacoes?: string;
+  user: {
+    id: number;
+    name: string;
+  };
 }
 
 export interface EventoCorrida {
