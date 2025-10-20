@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Mail, Phone, Calendar, Edit, Trash2, User } from 'lucide-react';
 import type { Aluno } from '../types';
-import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser } from '../services/alunoApi';
+import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser, inativarAluno, ativarAluno } from '../services/alunoApi';
 import { buscarEnderecoPorCep } from '../utils/cep';
 import Swal from 'sweetalert2';
-import { inativarAluno } from '../services/alunoApi';
-import { ativarAluno } from '../services/alunoApi';
-
 
 export default function Atletas() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -14,7 +11,6 @@ export default function Atletas() {
   const [atletas, setAtletas] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-
   const [editModal, setEditModal] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
 
@@ -83,109 +79,100 @@ export default function Atletas() {
   }
 
   async function handleSubmit(e: React.FormEvent) {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const userExists = await checkUserEmail(form.user_email);
 
-  try {
-    // 1️⃣ Checa se o usuário existe
-    const userExists = await checkUserEmail(form.user_email);
+      if (!userExists) {
+        const { value: userInfo } = await Swal.fire({
+          title: 'Usuário não encontrado',
+          html:
+            '<input id="swal-name" class="swal2-input" placeholder="Nome">' +
+            '<input id="swal-pass" type="password" class="swal2-input" placeholder="Senha">',
+          focusConfirm: false,
+          preConfirm: () => {
+            const name = (document.getElementById('swal-name') as HTMLInputElement).value;
+            const password = (document.getElementById('swal-pass') as HTMLInputElement).value;
+            if (!name || !password) {
+              Swal.showValidationMessage('Preencha todos os campos');
+              return null;
+            }
+            return { name, password };
+          },
+        });
 
-    if (!userExists) {
-      // 2️⃣ Abre modal de cadastro de usuário
-      const { value: userInfo } = await Swal.fire({
-        title: 'Usuário não encontrado',
-        html:
-          '<input id="swal-name" class="swal2-input" placeholder="Nome">' +
-          '<input id="swal-pass" type="password" class="swal2-input" placeholder="Senha">',
-        focusConfirm: false,
-        preConfirm: () => {
-          const name = (document.getElementById('swal-name') as HTMLInputElement).value;
-          const password = (document.getElementById('swal-pass') as HTMLInputElement).value;
-          if (!name || !password) {
-            Swal.showValidationMessage('Preencha todos os campos');
-            return null;
-          }
-          return { name, password };
+        if (!userInfo) {
+          setLoading(false);
+          return;
         }
-      });
 
-      if (!userInfo) {
-        setLoading(false);
-        return;
+        const userResult = await registerUser({
+          email: form.user_email,
+          name: userInfo.name,
+          password: userInfo.password,
+        });
+
+        if (!userResult.ok) {
+          Swal.fire({
+            icon: 'error',
+            title: 'Erro ao cadastrar usuário',
+            text: userResult.message || 'Não foi possível cadastrar o usuário',
+          });
+          setLoading(false);
+          return;
+        }
+
+        Swal.fire({
+          icon: 'success',
+          title: 'Usuário cadastrado!',
+          text: 'O usuário foi cadastrado com sucesso.',
+        });
       }
 
-      // 3️⃣ Cadastra o usuário
-      const userResult = await registerUser({
-        email: form.user_email,
-        name: userInfo.name,
-        password: userInfo.password
-      });
-
-      if (!userResult.ok) {
+      const { ok, result } = await createAluno(form);
+      if (!ok) {
         Swal.fire({
           icon: 'error',
-          title: 'Erro ao cadastrar usuário',
-          text: userResult.message || 'Não foi possível cadastrar o usuário',
+          title: 'Erro ao cadastrar aluno',
+          text: traduzirErroApi(result.message || ''),
         });
         setLoading(false);
         return;
       }
 
+      setShowModal(false);
+      setForm({
+        user_email: '',
+        cpf: '',
+        data_nascimento: '',
+        sexo: '',
+        telefone: '',
+        cep: '',
+        endereco: '',
+        cidade: '',
+        estado: '',
+      });
+
+      const alunos = await fetchAlunos();
+      setAtletas(alunos);
+
       Swal.fire({
         icon: 'success',
-        title: 'Usuário cadastrado!',
-        text: 'O usuário foi cadastrado com sucesso.',
+        title: 'Aluno cadastrado!',
+        text: 'O aluno foi cadastrado com sucesso.',
       });
-    }
-
-    // 4️⃣ Cadastra o aluno normalmente
-    const { ok, result } = await createAluno(form);
-    if (!ok) {
+    } catch {
       Swal.fire({
         icon: 'error',
-        title: 'Erro ao cadastrar aluno',
-        text: traduzirErroApi(result.message || ''),
+        title: 'Erro',
+        text: 'Não foi possível cadastrar.',
       });
+    } finally {
       setLoading(false);
-      return;
     }
-
-    setShowModal(false);
-    setForm({
-      user_email: '',
-      cpf: '',
-      data_nascimento: '',
-      sexo: '',
-      telefone: '',
-      cep: '',
-      endereco: '',
-      cidade: '',
-      estado: '',
-    });
-
-    const alunos = await fetchAlunos();
-    setAtletas(alunos);
-
-    Swal.fire({
-      icon: 'success',
-      title: 'Aluno cadastrado!',
-      text: 'O aluno foi cadastrado com sucesso.',
-    });
-
-  } catch (err) {
-    Swal.fire({
-      icon: 'error',
-      title: 'Erro',
-      text: 'Não foi possível cadastrar.',
-    });
-  } finally {
-    setLoading(false);
   }
-}
 
-
-
-  // Função para traduzir mensagens de erro da API
   function traduzirErroApi(mensagem: string) {
     if (mensagem.includes('user email')) return 'O e-mail informado é inválido ou já está em uso.';
     if (mensagem.includes('cpf')) return 'O CPF informado é inválido ou já está cadastrado.';
@@ -195,7 +182,6 @@ export default function Atletas() {
     return 'Não foi possível cadastrar/editar o aluno. Verifique os dados e tente novamente.';
   }
 
-  // Modal editar
   function openEditModal(atleta: Aluno) {
     setEditId(atleta.id);
     setEditForm({
@@ -219,14 +205,8 @@ export default function Atletas() {
     if (type === 'checkbox' && e.target instanceof HTMLInputElement) {
       newValue = e.target.checked;
       setEditForm({ ...editForm, [name]: newValue });
-
-      // Ativar/inativar imediatamente ao clicar no checkbox
       if (name === 'ativo' && editId) {
-        if (newValue) {
-          handleAtivarAluno(editId);
-        } else {
-          handleInativarAluno(editId);
-        }
+        newValue ? handleAtivarAluno(editId) : handleInativarAluno(editId);
       }
       return;
     }
@@ -270,8 +250,6 @@ export default function Atletas() {
       setLoading(false);
     }
   }
-
-
 
   async function handleInativarAluno(id: number) {
     const confirm = await Swal.fire({
@@ -367,6 +345,7 @@ export default function Atletas() {
 
   return (
     <div className="space-y-6">
+      {/* Header e botão novo atleta */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Atletas</h2>
@@ -381,6 +360,7 @@ export default function Atletas() {
         </button>
       </div>
 
+      {/* Busca */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div className="relative mb-6">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -396,6 +376,7 @@ export default function Atletas() {
           />
         </div>
 
+        {/* Lista de atletas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {paginatedAtletas.map((atleta) => (
             <div
@@ -452,6 +433,7 @@ export default function Atletas() {
           ))}
         </div>
 
+        {/* Paginação */}
         {totalPages > 1 && (
           <div className="flex justify-center items-center gap-2 mt-8">
             <button
@@ -466,9 +448,7 @@ export default function Atletas() {
                 key={idx + 1}
                 onClick={() => setCurrentPage(idx + 1)}
                 className={`px-3 py-1 rounded font-medium ${
-                  currentPage === idx + 1
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-gray-100 text-gray-700'
+                  currentPage === idx + 1 ? 'bg-orange-600 text-white' : 'bg-gray-100 text-gray-700'
                 }`}
               >
                 {idx + 1}
