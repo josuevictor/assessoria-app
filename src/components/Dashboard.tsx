@@ -73,7 +73,7 @@ export default function Dashboard() {
         },
         {
           title: "KM Totais",
-          value: km.toFixed(1),
+          value: Number(km).toFixed(1),
           change: "+15% este mês",
           icon: <TrendingUp size={24} />,
           color: "bg-purple-500",
