@@ -38,7 +38,7 @@ export default function Dashboard() {
       const eventos = eventosRes.data;
 
       // Estatísticas
-      const atletasAtivos = alunos.filter((a: any) => a.ativo === 1).length;
+      const atletasAtivos = alunos.filter((a: any) => a.ativo === true).length;
       const totalTreinos = treinos.length;
       const eventosFuturos = eventos.filter(
         (e: any) => new Date(e.data_evento) > new Date()
