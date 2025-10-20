@@ -337,11 +337,10 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                //disabled={loading}
-                disabled
+                disabled={loading}
                 className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2.5 rounded-lg transition"
               >
-                {loading ? "Cadastrando..." : "Cadastrar - Botão desativado"}
+                {loading ? "Cadastrando..." : "Cadastrar"}
               </button>
             </form>
           </div>
