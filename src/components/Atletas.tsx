@@ -86,20 +86,24 @@ export default function Atletas() {
 
       if (!userExists) {
         const { value: userInfo } = await Swal.fire({
-          title: 'Usuário não encontrado',
-          html:
-            '<input id="swal-name" class="swal2-input" placeholder="Nome">' +
-            '<input id="swal-pass" type="password" class="swal2-input" placeholder="Senha">',
+          title: 'Cadastrar usuário para o atleta',
+          html: `
+            <p style="font-size: 0.875rem; color: #555; margin-bottom: 1rem; text-align: center;">
+              Este aluno ainda não possui cadastro de usuário. Um novo usuário será criado ao clicar em "OK".<br/>
+              ⚠️ <small>Obs: A senha temporária será o CPF do aluno.</small>
+            </p>
+            <input id="swal-name" class="swal2-input" placeholder="Nome do Aluno" />
+          `,
           focusConfirm: false,
           preConfirm: () => {
             const name = (document.getElementById('swal-name') as HTMLInputElement).value;
-            const password = (document.getElementById('swal-pass') as HTMLInputElement).value;
-            if (!name || !password) {
-              Swal.showValidationMessage('Preencha todos os campos');
+            if (!name) {
+              Swal.showValidationMessage('Por favor, preencha o nome do aluno');
               return null;
             }
-            return { name, password };
+            return { name };
           },
+          confirmButtonColor: '#ea580c',
         });
 
         if (!userInfo) {
@@ -110,7 +114,7 @@ export default function Atletas() {
         const userResult = await registerUser({
           email: form.user_email,
           name: userInfo.name,
-          password: userInfo.password,
+          cpf: form.cpf,
         });
 
         if (!userResult.ok) {

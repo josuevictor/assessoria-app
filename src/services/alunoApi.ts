@@ -1,11 +1,15 @@
 import type { Aluno } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL;
+// URL da API definida na variável de ambiente
+const API_URL = import.meta.env.VITE_API_URL; 
+
+// URL da API local para testes
+//const API_URL = 'http://127.0.0.1:8000/api'; 
 
 export async function checkUserEmail(email: string) {
   try {
     const res = await fetch(`${API_URL}/check-user`, {
-      method: 'POST',
+      method: 'GET',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email }),
     });
@@ -17,14 +21,28 @@ export async function checkUserEmail(email: string) {
   }
 }
 
-export async function registerUser(userData: { email: string, name: string, password: string }) {
-  const res = await fetch(`${API_URL}/register`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(userData),
-  });
-  return res.json();
+export async function registerUser(userData: { email: string; name: string; cpf: string }) {
+  try {
+    const response = await fetch(`${API_URL}/register/aluno`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    });
+
+    // Tenta converter o JSON, mesmo em erro
+    const result = await response.json().catch(() => ({}));
+
+    // Verifica se o HTTP status indica sucesso
+    if (!response.ok) {
+      return { ok: false, message: result.message || 'Erro ao registrar usuário' };
+    }
+
+    return { ok: true, message: 'Usuário cadastrado com sucesso', result };
+  } catch (error: any) {
+    return { ok: false, message: error.message || 'Erro inesperado' };
+  }
 }
+
 
 export async function fetchAlunos(): Promise<Aluno[]> {
   const response = await fetch(`${API_URL}/alunos/`);
