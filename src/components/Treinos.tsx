@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { Activity, Plus, Calendar, CheckCircle2 } from 'lucide-react';
 import type { Treino } from '../types';
 import Swal from 'sweetalert2';
+import { API_URL } from '../config';
+import { getPlanilhas } from '../services/planilhaService';
+import type { Planilha } from '../types';
 
 export default function Treinos() {
   const [treinos, setTreinos] = useState<Record<string, Treino[]>>({});
@@ -18,9 +21,10 @@ export default function Treinos() {
   const [observacoes, setObservacoes] = useState('');
   const [saving, setSaving] = useState(false);
 
-  const diasSemana = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
+  const [planilhas, setPlanilhas] = useState<Planilha[]>([]);
+  const [planilhaSelecionada, setPlanilhaSelecionada] = useState<number | "">("");
 
-  const API_URL = import.meta.env.VITE_API_URL;
+  const diasSemana = ['segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado', 'domingo'];
 
   useEffect(() => {
     async function fetchTreinos() {
@@ -45,7 +49,34 @@ export default function Treinos() {
     fetchTreinos();
   }, []);
 
+
+  useEffect(() => {
+  async function fetchPlanilhas() {
+    try {
+      const data = await getPlanilhas(); // sua service já retorna Planilha[]
+      setPlanilhas(data);
+    } catch (error) {
+      console.error("Erro ao buscar planilhas:", error);
+    }
+  }
+
+  fetchPlanilhas();
+}, []);
+
+
   async function handleNovoTreino(e: React.FormEvent) {
+
+    body: JSON.stringify({
+      cpf,
+      planilha_id: planilhaSelecionada, // 🔹 novo campo
+      data_treino: dataTreino,
+      dia_semana: diaSemana,
+      tipo,
+      distancia_prevista_km: distanciaPrevistaKm ? parseFloat(distanciaPrevistaKm) : null,
+      tempo_previsto_min: tempoPrevistoMin ? parseInt(tempoPrevistoMin) : null,
+      observacoes,
+    }),
+
     e.preventDefault();
     setSaving(true);
     try {
@@ -54,6 +85,7 @@ export default function Treinos() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           cpf,
+          planilha_id: planilhaSelecionada,
           data_treino: dataTreino,
           dia_semana: diaSemana,
           tipo,
@@ -95,7 +127,23 @@ export default function Treinos() {
         const response = await fetch(`${API_URL}/treino`);
         const data: Treino[] = await response.json();
         const agrupados: Record<string, Treino[]> = diasSemana.reduce((acc, dia) => {
-          acc[dia] = data.filter((t) => t.dia_semana.toLowerCase() === dia);
+        //acc[dia] = data.filter((t) => t.dia_semana.toLowerCase() === dia);
+          acc[dia] = data.filter((t) => {
+          const diaTreino = (t.dia_semana || '')
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '') // remove acentos
+            .trim();
+
+          const diaComparado = dia
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '');
+
+          return diaTreino === diaComparado;
+        });
+
+          
           return acc;
         }, {} as Record<string, Treino[]>);
         setTreinos(agrupados);
@@ -245,6 +293,24 @@ export default function Treinos() {
                   required
                 />
               </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Planilha</label>
+                <select
+                  value={planilhaSelecionada}
+                  onChange={e => setPlanilhaSelecionada(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                  required
+                >
+                  <option value="">Selecione uma planilha</option>
+                  {planilhas.map(p => (
+                    <option key={p.id} value={p.id}>
+                      {p.descricao} ({p.user?.name})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data do Treino</label>
                 <input

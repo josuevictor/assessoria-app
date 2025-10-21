@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Plus, User, Calendar, Weight, Ruler, Search } from 'lucide-react';
 import type { AvaliacaoFisica } from '../types';
+import { getAvaliacoes, createAvaliacao } from '../services/avaliacaoService';
 
 export default function Avaliacoes() {
   const [showModal, setShowModal] = useState(false);
@@ -11,22 +12,13 @@ export default function Avaliacoes() {
 
   const ITEMS_PER_PAGE = 6;
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
-  // Buscar avaliações da API
   useEffect(() => {
-    const fetchAvaliacoes = async () => {
-      try {
-        const response = await fetch(`${API_URL}/avaliacoes-fisicas/`);
-        const data = await response.json();
-        setAvaliacoes(data);
-      } catch (error) {
-        setAvaliacoes([]);
-      } finally {
-        setLoading(false);
-      }
+    const fetchData = async () => {
+      const data = await getAvaliacoes();
+      setAvaliacoes(data);
+      setLoading(false);
     };
-    fetchAvaliacoes();
+    fetchData();
   }, []);
 
   // Filtro de pesquisa
@@ -203,86 +195,190 @@ export default function Avaliacoes() {
 
       {/* ...modal de avaliação física... */}
       {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Nova Avaliação Física</h3>
-            <form className="space-y-4">
-              {/* ...campos do formulário... */}
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Salvar Avaliação
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+          <h3 className="text-xl font-bold text-gray-900 mb-4">Nova Avaliação Física</h3>
+          <form
+            className="space-y-4"
+            onSubmit={async (e) => {
+              e.preventDefault();
 
-      {showModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Nova Planilha</h3>
-            <form className="space-y-4">
+              const formData = new FormData(e.currentTarget);
+              const novaAvaliacao = {
+                cpf: formData.get('cpf') as string,
+                data_avaliacao: formData.get('data_avaliacao') as string,
+                peso: parseFloat(formData.get('peso') as string),
+                percentual_gordura: parseFloat(formData.get('percentual_gordura') as string),
+                vo2max: parseFloat(formData.get('vo2max') as string),
+                massa_magra: parseFloat(formData.get('massa_magra') as string),
+                massa_gorda: parseFloat(formData.get('massa_gorda') as string),
+                imc: parseFloat(formData.get('imc') as string),
+                frequencia_cardiaca_repouso: parseInt(formData.get('frequencia_cardiaca_repouso') as string),
+                circunferencia_abdomen: parseFloat(formData.get('circunferencia_abdomen') as string),
+                observacoes: formData.get('observacoes') as string,
+              };
+
+              try {
+                const created = await createAvaliacao(novaAvaliacao);
+                alert('Avaliação criada com sucesso!');
+                setAvaliacoes((prev) => [created, ...prev]);
+                setShowModal(false);
+              } catch (err) {
+                console.error(err);
+                alert('Erro ao criar avaliação. Verifique os dados e tente novamente.');
+              }
+            }}
+          >
+            {/* CPF */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+              <input
+                name="cpf"
+                type="text"
+                placeholder="000.000.000-00"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Data da Avaliação */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Data da Avaliação</label>
+              <input
+                name="data_avaliacao"
+                type="date"
+                required
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Peso e Gordura */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Nome da Planilha</label>
-                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Peso (kg)</label>
+                <input
+                  name="peso"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Atleta</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent">
-                  <option>Selecione um atleta</option>
-                  <option>João Silva</option>
-                  <option>Maria Santos</option>
-                  <option>Pedro Costa</option>
-                </select>
+                <label className="block text-sm font-medium text-gray-700 mb-1">% Gordura</label>
+                <input
+                  name="percentual_gordura"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* VO2Max e IMC */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">VO₂ Máx</label>
+                <input
+                  name="vo2max"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
-                <textarea rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"></textarea>
+                <label className="block text-sm font-medium text-gray-700 mb-1">IMC</label>
+                <input
+                  name="imc"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Início</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Data Fim</label>
-                  <input type="date" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
-                </div>
+            </div>
+
+            {/* Massa magra e gorda */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Massa Magra (kg)</label>
+                <input
+                  name="massa_magra"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Objetivo</label>
-                <input type="text" className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent" />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Massa Gorda (kg)</label>
+                <input
+                  name="massa_gorda"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
-                >
-                  Criar Planilha
-                </button>
+            </div>
+
+            {/* Frequência cardíaca e circunferência */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">FC Repouso (bpm)</label>
+                <input
+                  name="frequencia_cardiaca_repouso"
+                  type="number"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
               </div>
-            </form>
-          </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Abdômen (cm)</label>
+                <input
+                  name="circunferencia_abdomen"
+                  type="number"
+                  step="0.1"
+                  required
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+              <textarea
+                name="observacoes"
+                rows={3}
+                placeholder="Ex: Leve aumento de massa gorda; recomenda-se ajuste alimentar..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Botões */}
+            <div className="flex gap-3 pt-4">
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                className="flex-1 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-medium transition-colors"
+              >
+                Salvar Avaliação
+              </button>
+            </div>
+          </form>
         </div>
-      )}
+      </div>
+    )}
+
 
     </div>
   );

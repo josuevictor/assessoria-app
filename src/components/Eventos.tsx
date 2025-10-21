@@ -1,14 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Calendar, MapPin, Users, Plus, Trophy } from 'lucide-react';
 import type { EventoCorrida } from '../types';
+import { API_URL } from '../config';
 
 export default function Eventos() {
   const [showModal, setShowModal] = useState(false);
   const [eventos, setEventos] = useState<EventoCorrida[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const API_URL = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
     async function carregarEventos() {

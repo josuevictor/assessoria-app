@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { ClipboardList, Plus, Calendar, User } from 'lucide-react';
 import type { Planilha } from '../types';
+import { getPlanilhas, createPlanilha, getTreinosByPlanilha } from '../services/planilhaService';
 
 export default function Planilhas() {
   const [showModal, setShowModal] = useState(false);
@@ -19,16 +20,11 @@ export default function Planilhas() {
   const [planilhaSelecionada, setPlanilhaSelecionada] = useState<Planilha | null>(null);
   const [loadingTreinos, setLoadingTreinos] = useState(false);
 
-  const API_URL = import.meta.env.VITE_API_URL;
-
+  //Buscar planilhas ao montar
   useEffect(() => {
-    async function carregarPlanilhas() {
+    async function carregar() {
       try {
-        const response = await fetch(`${API_URL}/planilhas`);
-        if (!response.ok) {
-          throw new Error(`Erro ao buscar planilhas (${response.status})`);
-        }
-        const data = await response.json();
+        const data = await getPlanilhas();
         setPlanilhas(data);
       } catch (err: any) {
         setError(err.message);
@@ -36,39 +32,21 @@ export default function Planilhas() {
         setLoading(false);
       }
     }
-
-    carregarPlanilhas();
+    carregar();
   }, []);
 
-
+  //Criar nova planilha
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const novaPlanilha = {
-      cpf,
-      data_inicio: dataInicio,
-      data_fim: dataFim,
-      descricao,
-    };
+    const novaPlanilha = { cpf, data_inicio: dataInicio, data_fim: dataFim, descricao };
 
     try {
-      const response = await fetch(`${API_URL}/planilhas`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(novaPlanilha),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Erro ao criar planilha (${response.status})`);
-      }
-
-      const data = await response.json();
+      const data = await createPlanilha(novaPlanilha);
       setPlanilhas([...planilhas, data]);
       setShowModal(false);
 
-      // Limpar formulário
+      // Limpa o form
       setCpf('');
       setDataInicio('');
       setDataFim('');
@@ -78,29 +56,28 @@ export default function Planilhas() {
     }
   };
 
+  // Abrir detalhes
   async function abrirDetalhes(planilha: Planilha) {
     setLoadingTreinos(true);
     setPlanilhaSelecionada(planilha);
     setDetalhesModal(true);
+
     try {
-      const response = await fetch(`https://assessoria-api.onrender.com/api/treino/${planilha.id}`);
-      if (!response.ok) throw new Error('Erro ao buscar treinos');
-      const data = await response.json();
+      const data = await getTreinosByPlanilha(planilha.id);
       setTreinos(data);
-    } catch (err) {
+    } catch {
       setTreinos([]);
     } finally {
       setLoadingTreinos(false);
     }
   }
 
+  // 🔹 Helpers visuais
   const getStatusColor = (dataFim: string | null) => {
     if (!dataFim) return 'bg-gray-100 text-gray-600';
-
     const hoje = new Date();
     const fim = new Date(dataFim);
     const diasRestantes = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-
     if (diasRestantes < 0) return 'bg-gray-100 text-gray-600';
     if (diasRestantes < 7) return 'bg-red-100 text-red-600';
     if (diasRestantes < 30) return 'bg-yellow-100 text-yellow-700';
@@ -112,23 +89,19 @@ export default function Planilhas() {
     const hoje = new Date();
     const fim = new Date(dataFim);
     const diasRestantes = Math.ceil((fim.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24));
-
     if (diasRestantes < 0) return 'Concluída';
     if (diasRestantes === 0) return 'Último dia';
     if (diasRestantes === 1) return '1 dia restante';
     return `${diasRestantes} dias restantes`;
   };
 
-  if (loading) {
-    return <p className="text-gray-600">Carregando planilhas...</p>;
-  }
-
-  if (error) {
-    return <p className="text-red-600">Erro: {error}</p>;
-  }
+  // 🔹 Render
+  if (loading) return <p className="text-gray-600">Carregando planilhas...</p>;
+  if (error) return <p className="text-red-600">Erro: {error}</p>;
 
   return (
     <div className="space-y-6">
+      {/* cabeçalho */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">Planilhas de Treino</h2>
@@ -143,6 +116,7 @@ export default function Planilhas() {
         </button>
       </div>
 
+      {/* cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {planilhas.map((planilha) => (
           <div
@@ -185,7 +159,10 @@ export default function Planilhas() {
               >
                 {getDiasRestantes(planilha.data_fim)}
               </span>
-              <button className="text-orange-600 hover:text-orange-700 text-sm font-medium" onClick={() => abrirDetalhes(planilha)}>
+              <button
+                className="text-orange-600 hover:text-orange-700 text-sm font-medium"
+                onClick={() => abrirDetalhes(planilha)}
+              >
                 Ver Detalhes →
               </button>
             </div>
@@ -193,7 +170,7 @@ export default function Planilhas() {
         ))}
       </div>
 
-        {showModal && (
+      {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-4">Nova Planilha</h3>
@@ -283,7 +260,6 @@ export default function Planilhas() {
           </div>
         </div>
       )}
-
     </div>
   );
 }

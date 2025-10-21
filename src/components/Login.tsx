@@ -18,6 +18,12 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
+  // URL da API definida na variável de ambiente
+ //const API_URL = import.meta.env.VITE_API_URL; 
+
+ // URL da API local para testes
+ const API_URL = 'http://127.0.0.1:8000/api'; 
+
 
   // Dados do cadastro
   const [formData, setFormData] = useState({
@@ -42,7 +48,7 @@ export default function LoginPage() {
     setMessage("");
 
     try {
-      const response = await fetch("https://assessoria-api.onrender.com/api/login", {
+      const response = await fetch(`${API_URL}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),

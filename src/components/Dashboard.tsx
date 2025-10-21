@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { API_URL } from "../config";
 import {
   Users,
   Activity,
@@ -23,7 +24,6 @@ export default function Dashboard() {
   const [upcomingEvents, setUpcomingEvents] = useState<any[]>([]);
   const [kmTotais, setKmTotais] = useState(0);
 
-  const API_URL = import.meta.env.VITE_API_URL;
 
   async function loadDashboardData() {
     try {

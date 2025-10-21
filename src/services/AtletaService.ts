@@ -1,10 +1,6 @@
 import type { Aluno } from '../types';
+import { API_URL } from '../config';
 
-// URL da API definida na variável de ambiente
-const API_URL = import.meta.env.VITE_API_URL; 
-
-// URL da API local para testes
-//const API_URL = 'http://127.0.0.1:8000/api'; 
 
 export async function checkUserEmail(email: string) {
   try {

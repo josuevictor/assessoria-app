@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Search, Plus, Mail, Phone, Calendar, Edit, Trash2, User } from 'lucide-react';
 import type { Aluno } from '../types';
-import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser, inativarAluno, ativarAluno } from '../services/alunoApi';
+import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser, inativarAluno, ativarAluno } from '../services/AtletaService';
 import { buscarEnderecoPorCep } from '../utils/cep';
 import Swal from 'sweetalert2';
 
@@ -343,6 +343,25 @@ export default function Atletas() {
     }
   }
 
+  function formatCPF(value: string) {
+  // Remove tudo que não é número
+  value = value.replace(/\D/g, '');
+
+  // Aplica a máscara de CPF: 000.000.000-00
+  if (value.length > 3) value = value.replace(/(\d{3})(\d)/, '$1.$2');
+  if (value.length > 6) value = value.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
+  if (value.length > 9) value = value.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
+
+  //limitar maximo de caracteres 14
+  if (value.length > 14) value = value.slice(0, 14);
+
+  return value;
+}
+
+function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
+  setForm({ ...form, cpf: formatCPF(e.target.value) });
+}
+
   if (loading) {
     return <p className="text-center mt-10 text-gray-600">Carregando atletas...</p>;
   }
@@ -488,7 +507,7 @@ export default function Atletas() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                <input name="cpf" type="text" value={form.cpf} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                <input name="cpf" type="text" value={form.cpf} onChange={handleCpfChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
@@ -559,7 +578,12 @@ export default function Atletas() {
             <form className="space-y-4" onSubmit={handleEditSubmit}>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                <input name="cpf" type="text" value={editForm.cpf} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <input name="cpf" 
+                      type="text"  
+                      value={editForm.cpf} 
+                      onChange={handleCpfChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
