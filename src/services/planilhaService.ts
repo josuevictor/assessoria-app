@@ -31,3 +31,15 @@ export async function getTreinosByPlanilha(id: number) {
   if (!response.ok) throw new Error('Erro ao buscar treinos');
   return await response.json();
 }
+
+// Atualizar planilha
+export async function updatePlanilha(id: number, data: Partial<Planilha>): Promise<Planilha> {
+  const res = await fetch(`${API_URL}/planilhas/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) throw new Error('Erro ao atualizar planilha');
+  return res.json();
+}

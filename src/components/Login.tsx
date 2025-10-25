@@ -13,16 +13,17 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [tenant, setTenant] = useState(localStorage.getItem("tenant") || "");
   const [showRegister, setShowRegister] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
 
-  // URL da API definida na variável de ambiente
+ //URL da API definida na variável de ambiente
  //const API_URL = import.meta.env.VITE_API_URL; 
 
- // URL da API local para testes
- const API_URL = 'http://127.0.0.1:8000/api'; 
+  // URL da API (local para testes)
+  const API_URL = "http://127.0.0.1:8000/api";
 
 
   // Dados do cadastro
@@ -47,10 +48,19 @@ export default function LoginPage() {
     setLoading(true);
     setMessage("");
 
+    if (!tenant.trim()) {
+      setMessage("⚠️ Informe o nome da assessoria antes de continuar.");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/login`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-Tenant": tenant.trim().toLowerCase(), // 👈 Nome do schema/tenant
+        },
         body: JSON.stringify({ email, password }),
       });
 
@@ -60,11 +70,13 @@ export default function LoginPage() {
         if (rememberMe) {
           localStorage.setItem("token", data.access_token);
           localStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("tenant", tenant.trim().toLowerCase());
         } else {
           sessionStorage.setItem("token", data.access_token);
           sessionStorage.setItem("user", JSON.stringify(data.user));
+          localStorage.setItem("tenant", tenant.trim().toLowerCase());
         }
-        localStorage.setItem("user", JSON.stringify(data.user));
+
         setMessage("✅ Login realizado com sucesso!");
         window.location.href = "/";
       } else {
@@ -96,7 +108,7 @@ export default function LoginPage() {
     }
 
     try {
-      const response = await fetch("https://assessoria-api.onrender.com/api/register", {
+      const response = await fetch(`${API_URL}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -138,12 +150,10 @@ export default function LoginPage() {
           <div className="bg-white p-3 rounded-lg">
             <Activity className="text-orange-600" size={32} />
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            StrideRun
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">StrideRun</h1>
         </div>
         <p className="text-orange-100 text-lg max-w-md text-center leading-relaxed">
-          Gerencie atletas, treinos e eventos com praticidade.  
+          Gerencie atletas, treinos e eventos com praticidade.
           Tudo em um único painel moderno e intuitivo.
         </p>
       </div>
@@ -157,6 +167,25 @@ export default function LoginPage() {
           </p>
 
           <form onSubmit={handleLogin} className="space-y-5">
+            {/* Input para o nome da assessoria */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nome da Assessoria
+              </label>
+              <input
+                type="text"
+                placeholder="ex: cliente6 ou eliteRun"
+                value={tenant}
+                onChange={(e) => setTenant(e.target.value)}
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 outline-none transition"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Esse será o nome do esquema no banco de dados.
+              </p>
+            </div>
+
+            {/* E-mail */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 E-mail
@@ -171,6 +200,7 @@ export default function LoginPage() {
               />
             </div>
 
+            {/* Senha */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Senha

@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { id: 'planilhas', label: 'Planilhas', path: '/planilhas', icon: <ClipboardList size={20} /> },
   { id: 'treinos', label: 'Treinos', path: '/treinos', icon: <Activity size={20} /> },
   { id: 'eventos', label: 'Eventos', path: '/eventos', icon: <Calendar size={20} /> },
-  { id: 'ranking', label: 'Ranking', path: '/ranking', icon: <Trophy size={20} /> },
+  //{ id: 'ranking', label: 'Ranking', path: '/ranking', icon: <Trophy size={20} /> },
   { id: 'avaliacoes', label: 'Avaliações', path: '/avaliacoes', icon: <TrendingUp size={20} /> },
   { id: 'sair', label: 'Sair', path: '/logout', icon: <LogOut size={20} /> }
 ];

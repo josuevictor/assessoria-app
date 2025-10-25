@@ -3,6 +3,8 @@ import { Search, Plus, Mail, Phone, Calendar, Edit, Trash2, User } from 'lucide-
 import type { Aluno } from '../types';
 import { fetchAlunos, createAluno, updateAluno, checkUserEmail, registerUser, inativarAluno, ativarAluno } from '../services/AtletaService';
 import { buscarEnderecoPorCep } from '../utils/cep';
+import { formatCPF } from '../utils/formatters';
+import { formatTelefone } from '../utils/formatters';
 import Swal from 'sweetalert2';
 
 export default function Atletas() {
@@ -65,18 +67,32 @@ export default function Atletas() {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  async function handleCep(e: React.ChangeEvent<HTMLInputElement>) {
-    handleChange(e);
-    if (e.target.value.replace(/\D/g, '').length === 8) {
-      const endereco = await buscarEnderecoPorCep(e.target.value);
-      if (endereco) {
-        setForm((prev) => ({
-          ...prev,
-          ...endereco,
-        }));
-      }
+async function handleCep(e: React.ChangeEvent<HTMLInputElement>) {
+  // Remove tudo que não é número
+  const somenteNumeros = e.target.value.replace(/\D/g, '');
+
+  // Atualiza o estado do input apenas com números
+  handleChange({
+    ...e,
+    target: {
+      ...e.target,
+      value: somenteNumeros,
+      name: e.target.name,
+    },
+  });
+
+  // Quando tiver 8 dígitos, faz a busca no ViaCEP
+  if (somenteNumeros.length === 8) {
+    const endereco = await buscarEnderecoPorCep(somenteNumeros);
+    if (endereco) {
+      setForm((prev) => ({
+        ...prev,
+        ...endereco,
+      }));
     }
   }
+}
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -343,23 +359,12 @@ export default function Atletas() {
     }
   }
 
-  function formatCPF(value: string) {
-  // Remove tudo que não é número
-  value = value.replace(/\D/g, '');
-
-  // Aplica a máscara de CPF: 000.000.000-00
-  if (value.length > 3) value = value.replace(/(\d{3})(\d)/, '$1.$2');
-  if (value.length > 6) value = value.replace(/(\d{3})\.(\d{3})(\d)/, '$1.$2.$3');
-  if (value.length > 9) value = value.replace(/(\d{3})\.(\d{3})\.(\d{3})(\d)/, '$1.$2.$3-$4');
-
-  //limitar maximo de caracteres 14
-  if (value.length > 14) value = value.slice(0, 14);
-
-  return value;
-}
-
 function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
   setForm({ ...form, cpf: formatCPF(e.target.value) });
+}
+
+function handleTelefoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+  setForm({ ...form, telefone: formatTelefone(e.target.value) });
 }
 
   if (loading) {
@@ -498,58 +503,139 @@ function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
       {/* Modal de cadastro */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto p-6 mt-24">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Novo Atleta</h3>
-            <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6 mt-16">
+            <h3 className="text-xl font-bold text-gray-900 mb-6">Novo Atleta</h3>
+
+            <form className="space-y-6" onSubmit={handleSubmit}>
+              {/* DADOS PESSOAIS */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input name="user_email" type="email" value={form.user_email} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Dados Pessoais</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input
+                      name="user_email"
+                      type="email"
+                      value={form.user_email}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                    <input
+                      name="cpf"
+                      type="text"
+                      value={form.cpf}
+                      onChange={handleCpfChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                    <input
+                      name="data_nascimento"
+                      type="date"
+                      value={form.data_nascimento}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                    <select
+                      name="sexo"
+                      value={form.sexo}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    >
+                      <option value="">Selecione</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                    </select>
+                  </div>
+                </div>
               </div>
+
+              {/* CONTATO */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                <input name="cpf" type="text" value={form.cpf} onChange={handleCpfChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Contato</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    <input
+                      name="telefone"
+                      type="text"
+                      value={form.telefone}
+                      onChange={handleTelefoneChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                    <input
+                      name="cep"
+                      type="text"
+                      value={form.cep}
+                      onChange={handleCep}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                      maxLength={9}
+                      placeholder="Digite o CEP"
+                    />
+                  </div>
+                </div>
               </div>
+
+              {/* ENDEREÇO */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
-                <input name="data_nascimento" type="date" value={form.data_nascimento} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">Endereço</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                    <input
+                      name="endereco"
+                      type="text"
+                      disabled
+                      value={form.endereco}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                    <input
+                      name="cidade"
+                      type="text"
+                      disabled
+                      value={form.cidade}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <input
+                      name="estado"
+                      type="text"
+                      disabled
+                      value={form.estado}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
-                <select name="sexo" value={form.sexo} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required>
-                  <option value="">Selecione</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                <input name="telefone" type="text" value={form.telefone} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                <input
-                  name="cep"
-                  type="text"
-                  value={form.cep}
-                  onChange={handleCep}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                  required
-                  maxLength={9}
-                  placeholder="Digite o CEP"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                <input name="endereco" type="text" value={form.endereco} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-                <input name="cidade" type="text" value={form.cidade} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                <input name="estado" type="text" value={form.estado} onChange={handleChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" required />
-              </div>
+
+              {/* BOTÕES */}
               <div className="flex gap-3 pt-4">
                 <button
                   type="button"
@@ -570,63 +656,139 @@ function handleCpfChange(e: React.ChangeEvent<HTMLInputElement>) {
         </div>
       )}
 
+
       {/* Modal de edição */}
       {editModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[80vh] overflow-y-auto p-6 mt-24">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">Editar Atleta</h3>
-            <form className="space-y-4" onSubmit={handleEditSubmit}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-8 mt-20">
+            <h3 className="text-2xl font-semibold text-gray-900 mb-6 text-center">
+              Editar Atleta
+            </h3>
+
+            <form className="space-y-6" onSubmit={handleEditSubmit}>
+              {/* Dados pessoais */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
-                <input name="cpf" 
-                      type="text"  
-                      value={editForm.cpf} 
+                <h4 className="text-lg font-medium text-gray-800 mb-3 border-b pb-1">Dados Pessoais</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CPF</label>
+                    <input
+                      name="cpf"
+                      type="text"
+                      value={editForm.cpf}
                       onChange={handleCpfChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg" 
-                />
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
+                    <input
+                      name="data_nascimento"
+                      type="date"
+                      value={editForm.data_nascimento}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
+                    <select
+                      name="sexo"
+                      value={editForm.sexo}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    >
+                      <option value="">Selecione</option>
+                      <option value="Masculino">Masculino</option>
+                      <option value="Feminino">Feminino</option>
+                      <option value="Outro">Outro</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2 pt-6">
+                    <input
+                      name="ativo"
+                      type="checkbox"
+                      checked={editForm.ativo}
+                      onChange={handleEditChange}
+                      className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <label className="text-sm font-medium text-gray-700">Ativo</label>
+                  </div>
+                </div>
               </div>
+
+              {/* Contato */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Data de Nascimento</label>
-                <input name="data_nascimento" type="date" value={editForm.data_nascimento} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
+                <h4 className="text-lg font-medium text-gray-800 mb-3 border-b pb-1">Contato</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
+                    <input
+                      name="telefone"
+                      type="text"
+                      value={editForm.telefone}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+
+                  {/* Endereço */}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
+                    <input
+                      name="cep"
+                      type="text"
+                      value={editForm.cep}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sexo</label>
-                <select name="sexo" value={editForm.sexo} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg">
-                  <option value="">Selecione</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outro">Outro</option>
-                </select>
+                <h4 className="text-lg font-medium text-gray-800 mb-3 border-b pb-1">Endereço</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="sm:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
+                    <input
+                      name="endereco"
+                      type="text"
+                      value={editForm.endereco}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
+                    <input
+                      name="cidade"
+                      type="text"
+                      value={editForm.cidade}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                    <input
+                      name="estado"
+                      type="text"
+                      value={editForm.estado}
+                      onChange={handleEditChange}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Telefone</label>
-                <input name="telefone" type="text" value={editForm.telefone} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">CEP</label>
-                <input name="cep" type="text" value={editForm.cep} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Endereço</label>
-                <input name="endereco" type="text" value={editForm.endereco} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Cidade</label>
-                <input name="cidade" type="text" value={editForm.cidade} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
-                <input name="estado" type="text" value={editForm.estado} onChange={handleEditChange} className="w-full px-3 py-2 border border-gray-300 rounded-lg" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ativo</label>
-                <input name="ativo" type="checkbox" checked={editForm.ativo} onChange={handleEditChange} />
-              </div>
-              <div className="flex gap-3 pt-4">
+
+              {/* Botões */}
+              <div className="flex gap-4 pt-6">
                 <button
                   type="button"
                   onClick={() => setEditModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium transition-colors"
+                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 font-medium transition-colors"
                 >
                   Cancelar
                 </button>

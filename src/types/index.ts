@@ -46,6 +46,8 @@ export interface Treino {
   data_treino: string;
   dia_semana: string;
   planilha?: Planilha;
+  distancia_prevista_km?: number;
+  tempo_previsto_min?: number;
 }
 
 export interface TreinoRealizado {
